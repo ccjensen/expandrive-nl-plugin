@@ -32,7 +32,7 @@
 		66A6415C1277720700FF9DF9 /* ExpanDriveOptionSheetController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExpanDriveOptionSheetController.h; sourceTree = "<group>"; };
 		66A6415D1277720700FF9DF9 /* ExpanDriveOptionSheetController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExpanDriveOptionSheetController.m; sourceTree = "<group>"; };
 		66A641A31277781E00FF9DF9 /* ScriptBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptBridge.h; sourceTree = "<group>"; };
-		8D5B49B6048680CD000E48DA /* ExpanDriveNLPlugin.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpanDriveNLPlugin.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D5B49B6048680CD000E48DA /* ExpanDrive.nlplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpanDrive.nlplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5B49B7048680CD000E48DA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D2F7E65807B2D6F200F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
@@ -116,7 +116,7 @@
 		19C28FB8FE9D52D311CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D5B49B6048680CD000E48DA /* ExpanDriveNLPlugin.bundle */,
+				8D5B49B6048680CD000E48DA /* ExpanDrive.nlplugin */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -165,7 +165,7 @@
 			name = ExpanDriveNLPlugin;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = ExpanDriveNLPlugin;
-			productReference = 8D5B49B6048680CD000E48DA /* ExpanDriveNLPlugin.bundle */;
+			productReference = 8D5B49B6048680CD000E48DA /* ExpanDrive.nlplugin */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -175,7 +175,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "ExpanDriveNLPlugin" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 089C166AFE841209C02AAC07 /* ExpanDriveNLPlugin */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -250,8 +257,8 @@
 				GCC_PREFIX_HEADER = ExpanDriveNLPlugin_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				PRODUCT_NAME = ExpanDriveNLPlugin;
-				WRAPPER_EXTENSION = bundle;
+				PRODUCT_NAME = ExpanDrive;
+				WRAPPER_EXTENSION = nlplugin;
 			};
 			name = Release;
 		};

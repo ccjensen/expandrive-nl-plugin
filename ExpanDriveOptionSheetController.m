@@ -3,7 +3,6 @@
 //  ExpanDriveNLPlugin
 //
 //  Created by Christopher Campbell Jensen on 10/26/10.
-//  Copyright 2010 __MyCompanyName__. All rights reserved.
 //
 
 #import "ExpanDriveOptionSheetController.h"
@@ -13,10 +12,8 @@
 - (void)awakeFromNib
 {
 	[drivenamesPopupButton removeAllItems];
-	drives = [self retrieveDrives];
+	drives = [[NSArray alloc] initWithArray:[self retrieveDrives]];
 	[self populatePopupButton:drivenamesPopupButton];
-	
-	NSLog(@"drives: %@", drives);
 }
 
 - (SBElementArray *)retrieveDrives
@@ -27,14 +24,15 @@
 
 - (void)populatePopupButton:(NSPopUpButton *)popupButton
 {
-	if (![drives count]) {
-		[drivenamesPopupButton addItemWithTitle:@"No drives created in ExpanDrive"];
-		[self setSubmitState:NO];
-	} else {
+	if ([drives count]) {
 		[self setSubmitState:YES];
 		for (ScriptBridgeDrive *drive in drives) {
 			[popupButton addItemWithTitle:[drive drivename]];
 		}
+		[self storeDefaultOptions];
+	} else {
+		[self setSubmitState:NO];
+		[drivenamesPopupButton addItemWithTitle:@"No drives created in ExpanDrive"];
 	}
 }
 
@@ -45,17 +43,27 @@
 	[saveButton setEnabled:state];
 }
 
-- (IBAction)actionChanged
+- (void)storeDefaultOptions
 {
-	NSNumber *selectedCellTag = [[NSNumber alloc] initWithInt:[[actionTypeMatrix selectedCell] tag]];
-	[options setValue:selectedCellTag forKey:ACTIONKEY];
-	
+	[self actionChanged:nil];
+	[self drivenameChanged:nil];
 }
 
-- (IBAction)drivenameChanged
+- (IBAction)actionChanged:(id)sender
+{	
+	int tag = [[actionTypeMatrix selectedCell] tag];
+	NSNumber *actionNumber = [[NSNumber alloc] initWithInt:tag];
+	[options setValue:actionNumber forKey:ACTIONKEY];
+}
+
+- (IBAction)drivenameChanged:(id)sender
 {
-	ScriptBridgeDrive *selectedDrive = [drives objectAtIndex:[drivenamesPopupButton indexOfSelectedItem]];
-	[options setValue:selectedDrive forKey:DRIVEKEY];
+	int index = [drivenamesPopupButton indexOfSelectedItem];
+	//check that an item is selected, -1 indicates none selected
+	if (index != -1) {
+		ScriptBridgeDrive *selectedDrive = [drives objectAtIndex:index];
+		[options setValue:selectedDrive forKey:DRIVEKEY];
+	}
 }
 
 @end

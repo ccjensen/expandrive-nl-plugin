@@ -3,7 +3,6 @@
 //  ExpanDriveNLPlugin
 //
 //  Created by Christopher Campbell Jensen on 10/26/10.
-//  Copyright 2010 __MyCompanyName__. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -14,10 +13,12 @@
 #define DRIVEKEY @"drivename"
 
 #define ACTIONCONNECT 1
+#define ACTIONCONNECTSTRING @"Connect to"
 #define ACTIONDISCONNECT 0
+#define ACTIONDISCONNECTSTRING @"Disconnect from"
 
 @interface ExpanDriveOptionSheetController : OptionSheetController {
-	SBElementArray *drives;
+	NSArray *drives;
 	
     IBOutlet NSPopUpButton *drivenamesPopupButton;
 	IBOutlet NSMatrix *actionTypeMatrix;
@@ -28,8 +29,9 @@
 - (void)populatePopupButton:(NSPopUpButton *)popupButton;
 - (void)setSubmitState:(BOOL)state;
 
-- (IBAction)actionChanged;
-- (IBAction)drivenameChanged;
+- (void)storeDefaultOptions;
+- (IBAction)actionChanged:(id)sender;
+- (IBAction)drivenameChanged:(id)sender;
 
 @end
 
