@@ -51,36 +51,143 @@
  */
 - (NSString *)title
 {	
+	NSString *title;
 	NSString *action = [self selectedActionTitle];
-	ScriptBridgeDrive *drive = [self selectedDrive];
 	
-	NSString *drivename = [drive drivename] ? [drive drivename] : @"<Drive deleted?>";
-	return [NSString stringWithFormat:@"%@ %@", action, drivename];
+	int performAction = [self selectedSingleOrMultiple];
+	switch (performAction) {
+		case PERFORMSINGLEACTION: {
+			ScriptBridgeDrive *drive = [self selectedDrive];
+			NSString *drivename = [drive drivename] ? [drive drivename] : @"";
+			title = [NSString stringWithFormat:@"%@: %@", action, drivename];
+			break;
+		}
+		case PERFORMMULTIPLEACTION: {
+			NSString *driveContains = [self selectedDriveContains] ? [self selectedDriveContains] : @"";
+			title = [NSString stringWithFormat:@"%@: %@", action, driveContains];
+			break;
+		}
+		case PERFORMALLACTION: {
+			title = [NSString stringWithFormat:@"%@: All drives", action];
+			break;
+		}
+		default:
+			title = [NSString stringWithFormat:@"%@: Unknown", action];
+			break;
+	}
+	return title;
 }
 
 /* actually do the action
  */
 - (void)performAction
 {
+	[self logString:[NSString stringWithFormat:@"ExpanDrivePlugin: %@", [self title]]];
+	int performAction = [self selectedSingleOrMultiple];
+	switch (performAction) {
+		case PERFORMSINGLEACTION:
+			[self performSingleAction];
+			break;
+		case PERFORMMULTIPLEACTION:
+			[self performMultipleAction];
+			break;
+		case PERFORMALLACTION:
+			[self performAllAction];
+			break;
+		default:
+			[self logString:[NSString stringWithFormat:@"ERROR: Single or Multiple with id <%d> not recognised", performAction]];
+			break;
+	}
+}
+
+- (void)performSingleAction
+{
 	ScriptBridgeDrive *drive = [self selectedDrive];
 	if (!drive) {
 		//no valid drive object, skip action
-		NSLog(@"ERROR - ExpanDrivePlugin: Drive not found. Has it been deleted?");
+		[self logString:[NSString stringWithFormat:@"ExpanDrivePlugin: Drive not found or not set."]];
 		return;
 	}
 	
 	int action = [self selectedAction];
 	switch (action) {
 		case ACTIONCONNECT:
-			if (![drive isConnected])
+			if (![drive isConnected]) {
 				[drive connect];
+				[self logString:[NSString stringWithFormat:@"Connected to %@", [[self selectedDrive] drivename]]];
+			}
 			break;
-		case ACTIONDISCONNECT:
-			if ([drive isConnected])
+		case ACTIONEJECT:
+			if ([drive isConnected]) {
 				[drive eject];
+				[self logString:[NSString stringWithFormat:@"Ejected %@", [[self selectedDrive] drivename]]];
+			}
 			break;
 		default:
-			NSLog(@"ERROR - ExpanDrivePlugin: Action with id <%d> not recognised");
+			[self logString:[NSString stringWithFormat:@"ERROR: Action with id <%d> not recognised", action]];
+			break;
+	}
+}
+
+- (void)performMultipleAction
+{
+	ScriptBridgeExpanDrive *expanDrive = [[self options] objectForKey:APPLICATIONKEY];
+	
+	NSString *driveProperty = [self selectedDriveproperty];
+	NSString *driveContains = [self selectedDriveContains];
+	
+	int action = [self selectedAction];
+	switch (action) {
+		case ACTIONCONNECT: {
+			NSArray *matchingDrives = [[expanDrive drives] filteredArrayUsingPredicate:
+									   [NSPredicate predicateWithFormat:@"(isConnected == NO) AND (%K contains %@)", driveProperty, driveContains]];
+			if ( [matchingDrives count] >= 1 ) {
+				[self logString:[NSString stringWithFormat:@"Connecting %d drives...", [matchingDrives count]]];
+				[matchingDrives makeObjectsPerformSelector:@selector(connect)];
+			}
+			[self logString:[NSString stringWithFormat:@"Connected to all ejected drives who's %@ contains %@", driveProperty, driveContains]];
+		} break;
+		case ACTIONEJECT: {
+			NSArray *matchingDrives = [[expanDrive drives] filteredArrayUsingPredicate:
+									   [NSPredicate predicateWithFormat:@"(isConnected == YES) AND (%K contains %@)", driveProperty, driveContains]];
+			if ( [matchingDrives count] >= 1 ) {
+				[self logString:[NSString stringWithFormat:@"Ejecting %d drives...", [matchingDrives count]]];
+				[matchingDrives makeObjectsPerformSelector:@selector(eject)];
+			}
+			[self logString:[NSString stringWithFormat:@"Ejected all connected drives who's %@ contains %@", driveProperty, driveContains]];
+		} break;
+		default:
+			[self logString:[NSString stringWithFormat:@"ERROR: Action with id <%d> not recognised"]];
+			break;
+	}
+}
+
+- (void)performAllAction
+{
+	ScriptBridgeExpanDrive *expanDrive = [[self options] objectForKey:APPLICATIONKEY];
+	
+	int action = [self selectedAction];
+	switch (action) {
+		case ACTIONCONNECT: {
+			NSArray *matchingDrives = [[expanDrive drives] filteredArrayUsingPredicate:
+									   [NSPredicate predicateWithFormat:@"(isConnected == NO)"]];
+			if ( [matchingDrives count] >= 1 ) {
+				[self logString:[NSString stringWithFormat:@"Connecting %d drives...", [matchingDrives count]]];
+				[matchingDrives makeObjectsPerformSelector:@selector(connect)];
+			}
+			[self logString:[NSString stringWithFormat:@"Connected all ejected drives"]];
+		} break;
+		case ACTIONEJECT: {
+			NSArray *matchingDrives = [[expanDrive drives] filteredArrayUsingPredicate:
+									   [NSPredicate predicateWithFormat:@"(isConnected == YES)"]];
+			if ( [matchingDrives count] >= 1 ) {
+				[self logString:[NSString stringWithFormat:@"Ejecting %d drives...", [matchingDrives count]]];
+				[matchingDrives makeObjectsPerformSelector:@selector(eject)];
+			}
+			[self logString:[NSString stringWithFormat:@"Ejected all connected drives"]];
+		} break;
+		default:
+			[self logString:[NSString stringWithFormat:@"ERROR: Action with id <%d> not recognised"]];
 			break;
 	}
 }
@@ -108,33 +215,67 @@
 
 #pragma mark -
 #pragma mark Added Methods
+- (void)logString:(NSString *)log
+{
+	NSLog(@"ExpanDrivePlugin: %@", log);
+}
+
 - (int)selectedAction
 {
 	NSNumber *result = [[self options] objectForKey:ACTIONKEY];
 	return [result intValue];
 }
 
+- (int)selectedSingleOrMultiple
+{
+	NSNumber *result = [[self options] objectForKey:PERFORMACTIONKEY];
+	return [result intValue];
+}
+
+- (NSString *)selectedDriveproperty
+{
+	return [[self options] objectForKey:DRIVEPROPERTYKEY];
+}
+
+- (NSString *)selectedDriveContains
+{
+	return [[self options] objectForKey:DRIVECONTAINSKEY];
+}
+
 - (NSString *)selectedActionTitle
 {
-	NSString *result;
-	int tag = [self selectedAction];
-	switch (tag) {
+	NSMutableString *result = [NSMutableString string];
+	int action = [self selectedAction];
+	switch (action) {
 		case ACTIONCONNECT:
-			result = ACTIONCONNECTSTRING;
+			[result appendString:ACTIONCONNECTSTRING];
 			break;
-		case ACTIONDISCONNECT:
-			result = ACTIONDISCONNECTSTRING;
+		case ACTIONEJECT:
+			[result appendString:ACTIONEJECTSTRING];
 			break;
 		default:
-			result = @"Unknown Action for";
+			[result appendString:@"<Perform unknown action>"];
 			break;
 	}
+	
+	int performAction = [self selectedSingleOrMultiple];
+	switch (performAction) {
+		case PERFORMSINGLEACTION:
+			//do nothing
+			break;
+		case PERFORMMULTIPLEACTION:
+			[result appendFormat:@" all drives who's %@ property contains", [self selectedDriveproperty]];
+			break;
+		default:
+			break;
+	}
+	
 	return result;
 }
 
 - (ScriptBridgeDrive *)selectedDrive
 {
-	ScriptBridgeDrive *drive = (ScriptBridgeDrive *)[[self options] objectForKey:DRIVEKEY];
+	ScriptBridgeDrive *drive = (ScriptBridgeDrive *)[[self options] objectForKey:DRIVENAMEKEY];
 	return [drive exists] ? drive : nil;
 }
 

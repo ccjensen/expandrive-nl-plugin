@@ -9,29 +9,62 @@
 #import "OptionSheetController.h"
 #import "ScriptBridge.h"
 
-#define ACTIONKEY @"action"
-#define DRIVEKEY @"drivename"
+#define APPLICATIONKEY @"application"
 
-#define ACTIONCONNECT 1
+#define PERFORMACTIONKEY @"performaction"
+#define PERFORMSINGLEACTION 0
+#define PERFORMMULTIPLEACTION 1
+#define PERFORMALLACTION 2
+
+#define ACTIONKEY @"action"
+#define ACTIONCONNECT 0
 #define ACTIONCONNECTSTRING @"Connect to"
-#define ACTIONDISCONNECT 0
-#define ACTIONDISCONNECTSTRING @"Disconnect from"
+#define ACTIONEJECT 1
+#define ACTIONEJECTSTRING @"Eject"
+
+//single
+#define DRIVENAMEKEY @"drivename"
+
+//multiple
+#define DRIVEPROPERTYKEY @"driveproperty"
+#define DRIVECONTAINSKEY @"drivecontains"
 
 @interface ExpanDriveOptionSheetController : OptionSheetController {
+	ScriptBridgeExpanDrive *expanDrive;
 	NSArray *drives;
+	NSArray *properties;
 	
-    IBOutlet NSPopUpButton *drivenamesPopupButton;
-	IBOutlet NSMatrix *actionTypeMatrix;
+	IBOutlet NSTabView *tabView;
 	IBOutlet NSButton *saveButton;
+	
+	//single
+	IBOutlet NSMatrix *singleActionTypeMatrix;
+	IBOutlet NSPopUpButton *drivenamesPopupButton;
+	
+	//multiple
+	IBOutlet NSMatrix *multipleActionTypeMatrix;
+	IBOutlet NSPopUpButton *drivepropertyPopupButton;
+	IBOutlet NSTextField *drivecontainsTextField;
+	
+	//all
+	IBOutlet NSMatrix *allActionTypeMatrix;
 }
 
+- (void)logString:(NSString *)log;
+
 - (SBElementArray *)retrieveDrives;
-- (void)populatePopupButton:(NSPopUpButton *)popupButton;
+- (NSArray *)retrieveDiskProperties;
+- (void)populateDriveNamesPopupButton;
+- (void)populateDrivepropertyPopupButton;
 - (void)setSubmitState:(BOOL)state;
 
-- (void)storeDefaultOptions;
 - (IBAction)actionChanged:(id)sender;
-- (IBAction)drivenameChanged:(id)sender;
+- (IBAction)save:(id)sender;
+
+- (NSNumber *)valueOfActionMatrix;
+- (ScriptBridgeDrive *)valueOfDrivenamePopupButton:(int)selectedTabIdentifier;
+- (NSString *)valueOfDrivecontainsTextField:(int)selectedTabIdentifier;
+- (NSString *)valueOfDrivepropertyPopupButton:(int)selectedTabIdentifier;
 
 @end
 

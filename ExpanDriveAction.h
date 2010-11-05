@@ -13,8 +13,17 @@
 
 }
 
+- (void)logString:(NSString *)log;
+
+- (void)performSingleAction;
+- (void)performMultipleAction;
+- (void)performAllAction;
+
 - (int)selectedAction;
+- (int)selectedSingleOrMultiple;
+- (NSString *)selectedDriveproperty;
 - (NSString *)selectedActionTitle;
+- (NSString *)selectedDriveContains;
 - (ScriptBridgeDrive *)selectedDrive;
 
 @end
