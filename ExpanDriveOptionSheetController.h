@@ -9,27 +9,7 @@
 #import "OptionSheetController.h"
 #import "ScriptBridge.h"
 
-#define APPLICATIONKEY @"application"
-
-#define PERFORMACTIONKEY @"performaction"
-#define PERFORMSINGLEACTION 0
-#define PERFORMMULTIPLEACTION 1
-#define PERFORMALLACTION 2
-
-#define ACTIONKEY @"action"
-#define ACTIONCONNECT 0
-#define ACTIONCONNECTSTRING @"Connect to"
-#define ACTIONEJECT 1
-#define ACTIONEJECTSTRING @"Eject"
-
-//single
-#define DRIVENAMEKEY @"drivename"
-
-//multiple
-#define DRIVEPROPERTYKEY @"driveproperty"
-#define DRIVECONTAINSKEY @"drivecontains"
-
-@interface ExpanDriveOptionSheetController : OptionSheetController {
+@interface ExpanDriveOptionSheetController : OptionSheetController <NSTabViewDelegate> {
 	ScriptBridgeExpanDrive *expanDrive;
 	NSArray *drives;
 	NSArray *properties;
@@ -50,19 +30,20 @@
 	IBOutlet NSMatrix *allActionTypeMatrix;
 }
 
-- (void)logString:(NSString *)log;
+- (void)resetControlsToOptions:(NSDictionary *)selectedOptions;
+- (IBAction)save:(id)sender;
+- (void)updateSubmitState:(NSNumber *)tabIdentifier;
+
+- (void)populateDriveNamesPopupButton;
+- (void)populateDrivepropertyPopupButton;
 
 - (SBElementArray *)retrieveDrives;
 - (NSArray *)retrieveDiskProperties;
-- (void)populateDriveNamesPopupButton;
-- (void)populateDrivepropertyPopupButton;
-- (void)setSubmitState:(BOOL)state;
 
 - (IBAction)actionChanged:(id)sender;
-- (IBAction)save:(id)sender;
 
 - (NSNumber *)valueOfActionMatrix;
-- (ScriptBridgeDrive *)valueOfDrivenamePopupButton:(int)selectedTabIdentifier;
+- (NSString *)valueOfDrivenamePopupButton:(int)selectedTabIdentifier;
 - (NSString *)valueOfDrivecontainsTextField:(int)selectedTabIdentifier;
 - (NSString *)valueOfDrivepropertyPopupButton:(int)selectedTabIdentifier;
 

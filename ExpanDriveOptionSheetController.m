@@ -6,19 +6,29 @@
 //
 
 #import "ExpanDriveOptionSheetController.h"
-#import <objc/runtime.h>
+#import "Constants.h"
+
+#define SingleActionWindowHeight 175
+#define MultipleActionExtraHeight 36
 
 @implementation ExpanDriveOptionSheetController
 
 - (void)awakeFromNib
 {
-	expanDrive = [SBApplication applicationWithBundleIdentifier:@"com.expandrive.ExpanDrive2"];
+	expanDrive = [SBApplication applicationWithBundleIdentifier:APPLICATIONBUNDLEIDENTIFIER];
 	[drivenamesPopupButton removeAllItems];
 	drives = [[NSArray arrayWithArray:[self retrieveDrives]] retain];
 	properties = [[self retrieveDiskProperties] retain];
 	
 	[self populateDriveNamesPopupButton];
 	[self populateDrivepropertyPopupButton];
+	
+	//if the sheet is being reopened, we want the current settings entered into the sheet
+	NSLog(@"ExpanDrivePluginOptionsSheet: loading [options]: %@", [self options]);
+	if ([[self options] count]) {
+		[self resetControlsToOptions:[self options]];
+	}
+	[self tabView:tabView willSelectTabViewItem:[tabView selectedTabViewItem]];
 }
 
 - (void)dealloc
@@ -29,9 +39,84 @@
 	[super dealloc];
 }
 
-- (void)logString:(NSString *)log
+- (void)resetControlsToOptions:(NSDictionary *)selectedOptions
 {
-	NSLog(@"ExpanDrivePluginOptionsSheet: %@", log);
+	//set all action type controls
+	[singleActionTypeMatrix selectCellWithTag:[[selectedOptions objectForKey:ACTIONKEY] intValue]];
+	[self actionChanged:singleActionTypeMatrix];
+	
+	//single sheet controls
+	[drivenamesPopupButton selectItemWithTitle:[selectedOptions objectForKey:DRIVENAMEKEY]];
+	
+	//multiple sheet controls
+	[drivepropertyPopupButton selectItemWithTitle:[selectedOptions objectForKey:DRIVEPROPERTYKEY]];
+	[drivecontainsTextField setStringValue:[selectedOptions objectForKey:DRIVECONTAINSKEY]];
+	
+	[tabView selectTabViewItemWithIdentifier:[selectedOptions objectForKey:PERFORMACTIONKEY]];
+}
+
+- (IBAction)save:(id)sender
+{
+	NSNumber *selectedTab = (NSNumber *)[[tabView selectedTabViewItem] identifier];
+	[options setValue:selectedTab forKey:PERFORMACTIONKEY];
+	[options setValue:[self valueOfActionMatrix] forKey:ACTIONKEY];
+	
+	//single
+	[options setValue:[self valueOfDrivenamePopupButton:[selectedTab intValue]] forKey:DRIVENAMEKEY];
+	
+	//multiple
+	[options setValue:[self valueOfDrivepropertyPopupButton:[selectedTab intValue]] forKey:DRIVEPROPERTYKEY];
+	[options setValue:[self valueOfDrivecontainsTextField:[selectedTab intValue]] forKey:DRIVECONTAINSKEY];
+	
+	//all
+	//only needs the actionMatrix value
+	
+	NSLog(@"ExpanDrivePluginOptionsSheet: storing [options]: %@", [self options]);
+	[self setOptions:[self window]];
+}
+
+- (void)updateSubmitState:(NSNumber *)tabIdentifier
+{
+	//check if controls should be activated for current window
+	BOOL state;
+	switch ([tabIdentifier intValue]) {
+
+		case PERFORMSINGLEACTION: {
+			state = [drives count] ? YES : NO;
+			
+			[singleActionTypeMatrix setEnabled:state];
+			[drivenamesPopupButton setEnabled:state];
+		} break;
+			
+		case PERFORMMULTIPLEACTION: {
+			state = YES;
+		} break;
+			
+		case PERFORMALLACTION: {
+			state = YES;
+		} break;
+	}
+	[saveButton setEnabled:state];
+}
+
+#pragma mark -
+#pragma mark Set up Controls
+- (void)populateDriveNamesPopupButton
+{
+	if ([drives count]) {
+		for (ScriptBridgeDrive *drive in drives) {
+			[drivenamesPopupButton addItemWithTitle:[drive drivename]];
+		}
+	} else {
+		[drivenamesPopupButton addItemWithTitle:@"No drives in ExpanDrive"];
+	}
+}
+
+- (void)populateDrivepropertyPopupButton
+{
+	for (NSString *property in properties) {
+		[drivepropertyPopupButton addItemWithTitle:property];
+	}
 }
 
 - (SBElementArray *)retrieveDrives
@@ -41,16 +126,19 @@
 
 - (NSArray *)retrieveDiskProperties
 {
-	return [NSArray arrayWithObjects:@"server", @"drivename", @"url", @"remotePath", nil];
+	return [NSArray arrayWithObjects:@"drivename", @"server", @"url", @"remotePath", nil];
 }
 
-- (void)setSubmitState:(BOOL)state
-{
-	[singleActionTypeMatrix setEnabled:state];
-	[drivenamesPopupButton setEnabled:state];
-	[saveButton setEnabled:state];
+#pragma mark -
+#pragma mark NSTabViewDelegate Methods
+- (void)tabView:(NSTabView *)aTabView willSelectTabViewItem:(NSTabViewItem *)aTabViewItem
+{	
+	NSNumber *identifier = (NSNumber *)[aTabViewItem identifier];
+	[self updateSubmitState:identifier];
 }
 
+#pragma mark -
+#pragma mark Synchronise controls
 // synchronises all actionTypeMatrix's
 - (IBAction)actionChanged:(id)sender
 {
@@ -70,23 +158,9 @@
 	}
 }
 
-- (IBAction)save:(id)sender
-{
-	NSNumber *selectedTab = (NSNumber *)[[tabView selectedTabViewItem] identifier];
-	[options setValue:selectedTab forKey:PERFORMACTIONKEY];
-	[options setValue:[self valueOfActionMatrix] forKey:ACTIONKEY];
-	
-	//single
-	[options setValue:[self valueOfDrivenamePopupButton:[selectedTab intValue]] forKey:DRIVENAMEKEY];
-	
-	//multiple
-	[options setValue:expanDrive forKey:APPLICATIONKEY];
-	[options setValue:[self valueOfDrivepropertyPopupButton:[selectedTab intValue]] forKey:DRIVEPROPERTYKEY];
-	[options setValue:[self valueOfDrivecontainsTextField:[selectedTab intValue]] forKey:DRIVECONTAINSKEY];
-	
-	[self setOptions:[self window]];
-}
 
+#pragma mark -
+#pragma mark Get current values of controls
 - (NSNumber *)valueOfActionMatrix
 {
 	NSNumber *selectedTab = (NSNumber *)[[tabView selectedTabViewItem] identifier];	
@@ -104,76 +178,43 @@
 		default:
 			break;
 	}
-	[self logString:[NSString stringWithFormat:@"Action set to: [%d]", value]];
 	return [NSNumber numberWithInt:value];
 }
 
-#pragma mark -
 #pragma mark Single Drive Actions
-- (ScriptBridgeDrive *)valueOfDrivenamePopupButton:(int)selectedTabIdentifier
+- (NSString *)valueOfDrivenamePopupButton:(int)selectedTabIdentifier
 {
-	ScriptBridgeDrive *value = nil;
-	
-	if (selectedTabIdentifier == PERFORMSINGLEACTION) {
-		//single tab selected
-		int index = [drivenamesPopupButton indexOfSelectedItem];
-		//check that an item is selected, -1 indicates none selected
-		if (index != -1) {
-			value = [drives objectAtIndex:index];
-		}
+	NSString *value;
+	int index = [drivenamesPopupButton indexOfSelectedItem];
+	//check that an item is selected, -1 indicates none selected
+	if (index != -1) {
+		value = [[drivenamesPopupButton itemAtIndex:index] title];
+	} else {
+		value = [NSString stringWithString:@""];
 	}
-	[self logString:[NSString stringWithFormat:@"Drive name set to: [%@]", value]];
 	return value;
 }
 
-- (void)populateDriveNamesPopupButton
-{
-	if ([drives count]) {
-		[self setSubmitState:YES];
-		for (ScriptBridgeDrive *drive in drives) {
-			[drivenamesPopupButton addItemWithTitle:[drive drivename]];
-		}
-	} else {
-		[self setSubmitState:NO];
-		[drivenamesPopupButton addItemWithTitle:@"No drives created in ExpanDrive"];
-	}
-}
-
-#pragma mark -
 #pragma mark Multiple Drive Actions
 - (NSString *)valueOfDrivecontainsTextField:(int)selectedTabIdentifier
-{
-	NSString *value = nil;
-	
-	if (selectedTabIdentifier == PERFORMMULTIPLEACTION) {
-		//single tab selected
-		value = [drivecontainsTextField stringValue];
-	}
-	[self logString:[NSString stringWithFormat:@"Drive contains set to: [%@]", value]];
-	return value;
+{	
+	return [drivecontainsTextField stringValue];
 }
 
 - (NSString *)valueOfDrivepropertyPopupButton:(int)selectedTabIdentifier
 {
-	NSString *value = nil;
+	NSString *value;
 	
-	if (selectedTabIdentifier == PERFORMMULTIPLEACTION) {
-		//single tab selected
-		int index = [drivepropertyPopupButton indexOfSelectedItem];
-		//check that an item is selected, -1 indicates none selected
-		if (index != -1) {
-			value = [[drivepropertyPopupButton selectedItem] title];
-		}
+	int index = [drivepropertyPopupButton indexOfSelectedItem];
+	//check that an item is selected, -1 indicates none selected
+	if (index != -1) {
+		value = [[drivepropertyPopupButton selectedItem] title];
+	} else {
+		value = [NSString stringWithString:@""];
 	}
-	[self logString:[NSString stringWithFormat:@"Drive property set to: [%@]", value]];
 	return value;
 }
 
-- (void)populateDrivepropertyPopupButton
-{
-	for (NSString *property in properties) {
-		[drivepropertyPopupButton addItemWithTitle:property];
-	}
-}
+
 
 @end

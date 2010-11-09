@@ -10,8 +10,10 @@
 #import "ScriptBridge.h"
 
 @interface ExpanDriveAction : NLAction {
-
+	ScriptBridgeExpanDrive *expanDrive;
 }
+
+@property (readonly) ScriptBridgeExpanDrive *expanDrive;
 
 - (void)logString:(NSString *)log;
 

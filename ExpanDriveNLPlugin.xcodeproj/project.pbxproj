@@ -32,6 +32,7 @@
 		66A6415C1277720700FF9DF9 /* ExpanDriveOptionSheetController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExpanDriveOptionSheetController.h; sourceTree = "<group>"; };
 		66A6415D1277720700FF9DF9 /* ExpanDriveOptionSheetController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExpanDriveOptionSheetController.m; sourceTree = "<group>"; };
 		66A641A31277781E00FF9DF9 /* ScriptBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptBridge.h; sourceTree = "<group>"; };
+		66FD728912889C2C00D41506 /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		8D5B49B6048680CD000E48DA /* ExpanDrive.nlplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpanDrive.nlplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5B49B7048680CD000E48DA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D2F7E65807B2D6F200F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
@@ -85,6 +86,7 @@
 		08FB77AFFE84173DC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				66FD728912889C2C00D41506 /* Constants.h */,
 				66A640DF1277636400FF9DF9 /* ExpanDrivePlugin.h */,
 				66A640E01277636400FF9DF9 /* ExpanDrivePlugin.m */,
 				66A640E21277639E00FF9DF9 /* ExpanDriveAction.h */,
@@ -175,6 +177,7 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "ExpanDriveNLPlugin" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
